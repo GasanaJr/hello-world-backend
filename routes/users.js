@@ -2,9 +2,16 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const {
+  loginValidation,
+  registerValidation,
+} = require("../helpers/validation");
 
 // Create a user
 router.post("/register", async (req, res) => {
+  // Data validation
+  const { error } = registerValidation(req.body);
+  if (error) return res.status(400).json(error.details[0].message);
   // Checking if email exists
   const emailExists = await User.findOne({ email: req.body.email });
   if (emailExists) {
@@ -30,6 +37,9 @@ router.post("/register", async (req, res) => {
 
 // Loggin in a user
 router.post("/login", async (req, res) => {
+  // Data validation
+  const { error } = loginValidation(req.body);
+  if (error) return res.status(400).json(error.details[0].message);
   const { email, password } = req.body;
   const user = await User.findOne({ email: email });
   if (!user) {
