@@ -53,7 +53,21 @@ router.post("/add", async (req, res) => {
 router.get("/get-courses", async (req, res) => {
   try {
     const courses = await Courses.find();
-    res.status(200).json({ Message: courses });
+    const coursesWithInstructors = await Promise.all(
+      courses.map(async (course) => {
+        const instructor = await Instructor.findById(course.instructor);
+        return {
+          ...course.toObject(),
+          instructorName: instructor ? instructor.name : "Instructor not Found",
+        };
+      })
+    );
+    res
+      .status(200)
+      .json({
+        Message: "Courses Fetched Successfully",
+        courses: coursesWithInstructors,
+      });
   } catch (error) {
     res.status(500).json({ Message: error.message });
   }
