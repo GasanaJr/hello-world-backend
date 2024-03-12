@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Courses = require("../models/Course");
 const {
   loginValidation,
   registerValidation,
@@ -49,7 +51,25 @@ router.post("/login", async (req, res) => {
   if (!validPass) {
     return res.status(400).json({ Message: "Incorrect Password" });
   }
-  res.status(200).json({ Message: "Login Successful" });
+  const payload = {
+    user: {
+      id: user.id,
+      role: user.role,
+    },
+  };
+  jwt.sign(payload, process.env.TOKEN_SECRET, (err, token) => {
+    if (err) throw err;
+    res.status(200).json({ token: token, user: user });
+  });
+});
+
+// Register in a course
+
+router.post("/enroll", async (req, res) => {
+  const { email, courseId } = req.params;
+  const user = await User.findOne({ email: email });
+  const course = await Courses.findOne({ id: courseId });
+  
 });
 
 module.exports = router;
