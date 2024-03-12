@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const cors = require("cors");
 const userRoute = require("./routes/users");
+const courseRoute = require("./routes/courses");
 app.get("/test", (req, res) => {
   res.json({ Message: "Hello World" });
 });
@@ -12,6 +13,7 @@ app.get("/test", (req, res) => {
 app.use(express.json());
 app.use(cors());
 app.use("/user", userRoute);
+app.use("/courses", courseRoute);
 
 // DB connection
 

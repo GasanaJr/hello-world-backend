@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const Courses = require("../models/Course");
+const Instructor = require("../models/Instructor");
 const {
   loginValidation,
   registerValidation,
@@ -13,27 +13,53 @@ const {
 router.post("/register", async (req, res) => {
   // Data validation
   const { error } = registerValidation(req.body);
-  if (error) return res.status(400).json(error.details[0].message);
-  // Checking if email exists
-  const emailExists = await User.findOne({ email: req.body.email });
-  if (emailExists) {
-    return res.status(400).json({ Message: "Email Already Exists!" });
+  if (error) return res.status(400).json({ Message: error.details[0].message });
+
+  // Checking if email exists in both User and Instructor collections to prevent duplicate registrations
+  const emailExistsInUsers = await User.findOne({ email: req.body.email });
+  const emailExistsInInstructors = await Instructor.findOne({
+    email: req.body.email,
+  });
+  if (emailExistsInUsers || emailExistsInInstructors) {
+    return res
+      .status(400)
+      .json({ Message: "Email already exists in our records." });
   }
+
   // Hashing the password
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
-  const user = new User({
-    name: req.body.name,
-    email: req.body.email,
-    password: hashedPassword,
-    role: req.body.role,
-  });
   try {
-    await user.save();
-    res.status(201).json({ Message: "User created Successfully" });
+    if (req.body.role === "instructor") {
+      // Assuming Instructor model is similar to User but might have additional fields
+      const instructor = new Instructor({
+        name: req.body.name,
+        email: req.body.email,
+        password: hashedPassword,
+        isApproved: false,
+        qualifications: req.body.qualifications,
+      });
+      await instructor.save();
+      res.status(201).json({
+        Message: "Instructor registered successfully. Pending approval.",
+      });
+    } else {
+      // Register as a regular user
+      const user = new User({
+        name: req.body.name,
+        email: req.body.email,
+        password: hashedPassword,
+        role: req.body.role,
+      });
+      await user.save();
+      res.status(201).json({ Message: "User created successfully." });
+    }
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res
+      .status(500)
+      .json({ Message: "An error occurred during the registration process." });
   }
 });
 
@@ -63,13 +89,41 @@ router.post("/login", async (req, res) => {
   });
 });
 
-// Register in a course
+// ----------------------- Admins Section --------------------------
+// Endpoint to approve an instructor
+router.post("/instructors/approve/:instructorId", async (req, res) => {
+  const { instructorId } = req.params;
 
-router.post("/enroll", async (req, res) => {
-  const { email, courseId } = req.params;
-  const user = await User.findOne({ email: email });
-  const course = await Courses.findOne({ id: courseId });
-  
+  try {
+    const instructor = await Instructor.findById(instructorId);
+
+    if (!instructor) {
+      return res.status(404).send("Instructor not found.");
+    }
+
+    instructor.isApproved = true;
+    await instructor.save();
+
+    res.status(200).json({
+      message: "Instructor approved successfully.",
+      instructor: instructor,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error occurred.");
+  }
 });
+
+router.get("/instructors", async (req, res) => {
+  try {
+    const instructors = await Instructor.find();
+    res.status(200).json({ Message: instructors });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ Message: "Server Error" });
+  }
+});
+
+// -------------------Instructors Endpoints ------------------------
 
 module.exports = router;
