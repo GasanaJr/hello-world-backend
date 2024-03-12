@@ -61,7 +61,7 @@ router.get("/get-courses", async (req, res) => {
 
 // Register in a course
 
-router.post("/enroll", async (req, res) => {
+router.post("/enroll/:email/:courseId", async (req, res) => {
   try {
     const { email, courseId } = req.params;
     const user = await User.findOne({ email: email });
@@ -91,6 +91,22 @@ router.post("/enroll", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ Message: "Server Error" });
+  }
+});
+
+// Get user courses
+
+router.get("/user-courses/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+    const courses = user.courses;
+    return res.status(200).json({ Courses: courses });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ Message: "An error occured fetching user courses" });
   }
 });
 
