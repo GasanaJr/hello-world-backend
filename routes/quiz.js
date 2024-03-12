@@ -19,6 +19,37 @@ router.post("/quizzes", async (req, res) => {
   }
 });
 
+router.get("/quizzes", async (req, res) => {
+  try {
+    const quizzes = await Quizzes.find();
+    res.status(200).json({ Message: quizzes });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ Message: error.message });
+  }
+});
+
+router.get("/quiz/:id", async (req, res) => {
+  const { id } = req.params; // Get the course ID from the request parameters
+
+  try {
+    // Find all quizzes that belong to the specific course
+    const quizzes = await Quizzes.find({ courseId: id });
+    if (!quizzes.length) {
+      return res
+        .status(404)
+        .json({ message: "No quizzes found for this course" });
+    }
+
+    res.status(200).json(quizzes);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while fetching the quizzes" });
+  }
+});
+
 router.post("/submit-quiz", async (req, res) => {
   const { userId, quizId, answers } = req.body;
 
