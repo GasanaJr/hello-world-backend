@@ -64,25 +64,63 @@ router.post("/register", async (req, res) => {
 });
 
 // Loggin in a user
+// router.post("/login", async (req, res) => {
+//   // Data validation
+//   const { error } = loginValidation(req.body);
+//   if (error) return res.status(400).json(error.details[0].message);
+//   const { email, password } = req.body;
+//   const user = await User.findOne({ email: email });
+//   if (!user) {
+//     return res.status(400).json({ Message: "Email or Password Incorrect" });
+//   }
+//   const validPass = await bcrypt.compare(password, user.password);
+//   if (!validPass) {
+//     return res.status(400).json({ Message: "Email or Password Incorrect" });
+//   }
+//   const payload = {
+//     user: {
+//       id: user.id,
+//       role: user.role,
+//     },
+//   };
+//   jwt.sign(payload, process.env.TOKEN_SECRET, (err, token) => {
+//     if (err) throw err;
+//     res.status(200).json({ token: token, user: user });
+//   });
+// });
 router.post("/login", async (req, res) => {
   // Data validation
   const { error } = loginValidation(req.body);
   if (error) return res.status(400).json(error.details[0].message);
+
   const { email, password } = req.body;
-  const user = await User.findOne({ email: email });
+
+  // Try to find the user in the User collection
+  let user = await User.findOne({ email: email });
+
+  // If not found in Users, try finding in Instructors
   if (!user) {
-    return res.status(400).json({ Message: "Email not Found" });
+    user = await Instructor.findOne({ email: email });
+    if (!user) {
+      return res.status(400).json({ Message: "Email or Password Incorrect" });
+    }
   }
+
+  // If user or instructor is found, verify the password
   const validPass = await bcrypt.compare(password, user.password);
   if (!validPass) {
-    return res.status(400).json({ Message: "Incorrect Password" });
+    return res.status(400).json({ Message: "Email or Password Incorrect" });
   }
+
+  // Construct payload based on whether the account is a User or Instructor
   const payload = {
     user: {
       id: user.id,
       role: user.role,
     },
   };
+
+  // Sign the JWT token and respond
   jwt.sign(payload, process.env.TOKEN_SECRET, (err, token) => {
     if (err) throw err;
     res.status(200).json({ token: token, user: user });

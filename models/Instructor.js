@@ -12,6 +12,10 @@ const instructorSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  password: {
+    type: String,
+    required: true,
+  },
   qualifications: {
     type: String,
     required: true,
@@ -31,6 +35,10 @@ const instructorSchema = new mongoose.Schema({
     type: Boolean,
     required: true,
     default: false,
+  },
+  role: {
+    type: String,
+    required: true,
   },
 });
 

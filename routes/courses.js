@@ -2,7 +2,8 @@ const Courses = require("../models/Course");
 const Instructor = require("../models/Instructor");
 const User = require("../models/User");
 const router = require("express").Router();
-
+const nodemailer = require("nodemailer");
+require("dotenv").config();
 // Route to add course by an instructor
 router.post("/add", async (req, res) => {
   const { title, description, link, instructorEmail } = req.body;
@@ -44,7 +45,7 @@ router.post("/add", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server error occurred.");
+    res.status(500).json({ message: "Server error occurred." });
   }
 });
 
@@ -62,12 +63,10 @@ router.get("/get-courses", async (req, res) => {
         };
       })
     );
-    res
-      .status(200)
-      .json({
-        Message: "Courses Fetched Successfully",
-        courses: coursesWithInstructors,
-      });
+    res.status(200).json({
+      Message: "Courses Fetched Successfully",
+      courses: coursesWithInstructors,
+    });
   } catch (error) {
     res.status(500).json({ Message: error.message });
   }
@@ -96,6 +95,32 @@ router.post("/enroll/:email/:courseId", async (req, res) => {
     user.courses.push(course._id);
     // save
     await user.save();
+    //Nodemailer
+    const transporter = nodemailer.createTransport({
+      service: "hotmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: email,
+      subject: "Enrollment Confirmation",
+      html: `Thank you for enrolling in <b>${course.title}</b>. You can access the course via this link.
+      <a href="${course.link}" target="_blank">${course.title}</a>
+       `,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        res.status(400).json(error);
+      } else {
+        console.log("email sent" + info);
+        //res.status(200).json("success");
+      }
+    });
 
     // Send response
     res.status(200).json({
@@ -121,6 +146,21 @@ router.get("/user-courses/:userId", async (req, res) => {
     return res
       .status(500)
       .json({ Message: "An error occured fetching user courses" });
+  }
+});
+
+// Get a specific course
+
+router.get("/course/:courseId", async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Courses.findById(courseId);
+    return res.status(200).json({ course: course });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ Message: "An error occured fetching the course" });
   }
 });
 
