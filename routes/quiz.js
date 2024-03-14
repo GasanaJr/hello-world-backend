@@ -3,7 +3,7 @@ const Quizzes = require("../models/Quiz");
 const UserProgress = require("../models/UserProgress");
 const User = require("../models/User");
 
-router.post("/quizzes", async (req, res) => {
+router.post("/quiz", async (req, res) => {
   const { courseId, questions } = req.body;
 
   const quiz = new Quizzes({
@@ -19,9 +19,21 @@ router.post("/quizzes", async (req, res) => {
   }
 });
 
-router.get("/quizzes", async (req, res) => {
+router.get("/get-quizzes", async (req, res) => {
   try {
     const quizzes = await Quizzes.find();
+    res.status(200).json({ Message: quizzes });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ Message: error.message });
+  }
+});
+
+// Get a specific quiz
+router.get("/get-quiz/:quizId", async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const quizzes = await Quizzes.findById(quizId);
     res.status(200).json({ Message: quizzes });
   } catch (error) {
     console.error(error);
@@ -41,7 +53,7 @@ router.get("/quiz/:id", async (req, res) => {
         .json({ message: "No quizzes found for this course" });
     }
 
-    res.status(200).json(quizzes);
+    res.status(200).json({ message: quizzes });
   } catch (error) {
     console.error(error);
     res

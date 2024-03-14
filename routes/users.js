@@ -127,6 +127,54 @@ router.post("/login", async (req, res) => {
   });
 });
 
+// Update a user
+router.put("/update/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Initialize a variable to hold the found document
+    let person;
+
+    // Check the role and update accordingly
+    if (req.body.role === "instructor") {
+      person = await Instructor.findById(userId);
+      if (person) {
+        // Update common fields
+        person.name = req.body.name || person.name;
+        person.email = req.body.email || person.email;
+        // Specific to instructors
+        person.qualifications = req.body.education || person.qualifications;
+      }
+    } else {
+      // Assuming "user" role or any other role is treated as a user
+      person = await User.findById(userId);
+      if (person) {
+        // Update common fields
+        person.name = req.body.name || person.name;
+        person.email = req.body.email || person.email;
+        // Specific to users
+        person.education = req.body.education || person.education;
+        person.skills = req.body.skills || person.skills;
+        person.interests = req.body.interests || person.interests;
+      }
+    }
+
+    // Check if the document was found and updated
+    if (person) {
+      await person.save();
+      res.status(200).json({
+        message: "Profile updated successfully.",
+        user: person,
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error occurred." });
+  }
+});
+
 // ----------------------- Admins Section --------------------------
 // Endpoint to approve an instructor
 router.post("/instructors/approve/:instructorId", async (req, res) => {

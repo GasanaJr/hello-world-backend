@@ -5,6 +5,7 @@ require("dotenv").config();
 const cors = require("cors");
 const userRoute = require("./routes/users");
 const courseRoute = require("./routes/courses");
+const quizRoute = require("./routes/quiz");
 app.get("/test", (req, res) => {
   res.json({ Message: "Hello World" });
 });
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use(cors());
 app.use("/user", userRoute);
 app.use("/courses", courseRoute);
+app.use("/quizzes", quizRoute);
 
 // DB connection
 
