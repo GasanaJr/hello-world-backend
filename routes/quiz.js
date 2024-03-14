@@ -4,11 +4,14 @@ const UserProgress = require("../models/UserProgress");
 const User = require("../models/User");
 
 router.post("/quiz", async (req, res) => {
-  const { courseId, questions } = req.body;
+  const { courseId, questions, title, description } = req.body;
 
   const quiz = new Quizzes({
+    title,
+    description,
     courseId,
     questions,
+    maxScore: questions.length,
   });
 
   try {
