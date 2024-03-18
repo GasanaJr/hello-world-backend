@@ -3,7 +3,10 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const JobListing = require("../models/Jobs");
 const Instructor = require("../models/Instructor");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
 const {
   loginValidation,
   registerValidation,
@@ -103,6 +106,15 @@ router.post("/login", async (req, res) => {
     user = await Instructor.findOne({ email: email });
     if (!user) {
       return res.status(400).json({ Message: "Email or Password Incorrect" });
+    } else if (!user.isApproved) {
+      const validPass = await bcrypt.compare(password, user.password);
+      if (!validPass) {
+        return res.status(400).json({ Message: "Email or Password Incorrect" });
+      }
+      return res.status(401).json({
+        Message:
+          "Instructor account not approved yet! Please contact your Admin.",
+      });
     }
   }
 
@@ -175,6 +187,22 @@ router.put("/update/:userId", async (req, res) => {
   }
 });
 
+// Getting all users
+router.get("/users", async (req, res) => {
+  try {
+    const users = await User.find();
+    const instructors = await Instructor.find();
+    res.status(200).json({
+      Message: "Users retrieved Successfully",
+      Users: users,
+      Instructors: instructors,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ Message: "Server Error" });
+  }
+});
+
 // ----------------------- Admins Section --------------------------
 // Endpoint to approve an instructor
 router.post("/instructors/approve/:instructorId", async (req, res) => {
@@ -187,13 +215,21 @@ router.post("/instructors/approve/:instructorId", async (req, res) => {
       return res.status(404).send("Instructor not found.");
     }
 
-    instructor.isApproved = true;
-    await instructor.save();
-
-    res.status(200).json({
-      message: "Instructor approved successfully.",
-      instructor: instructor,
-    });
+    if (instructor.isApproved == true) {
+      instructor.isApproved = false;
+      await instructor.save();
+      res.status(200).json({
+        message: "Instructor Deactivated successfully.",
+        instructor: instructor,
+      });
+    } else {
+      instructor.isApproved = true;
+      await instructor.save();
+      res.status(200).json({
+        message: "Instructor Activated successfully.",
+        instructor: instructor,
+      });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error occurred.");
@@ -207,6 +243,68 @@ router.get("/instructors", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ Message: "Server Error" });
+  }
+});
+
+router.post("/job-listings", async (req, res) => {
+  const { title, description, requiredSkills, link } = req.body;
+
+  const newJob = new JobListing({
+    title,
+    description,
+    requiredSkills,
+    link,
+  });
+
+  try {
+    await newJob.save();
+
+    // Find matching users
+    const matchingUsers = await User.find({
+      skills: { $in: requiredSkills },
+    });
+
+    // Send emails to matching users (pseudo-code)
+    matchingUsers.forEach((user) => {
+      sendEmailToUser(user, newJob);
+    });
+
+    res.status(201).json({
+      message: "Job posted successfully and emails sent to matching users.",
+      matchingUsers: matchingUsers,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+
+  async function sendEmailToUser(user, job) {
+    const transporter = nodemailer.createTransport({
+      service: "hotmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: user.email,
+      subject: `New job listing that matches your skills: ${job.title}`,
+      html: `
+      Hi ${user.name},<br>We've found a new job listing that matches your skills. <br>
+      <b>Title</b>: ${job.title}. <br>
+      <b>Description</b>: ${job.description} <br> Apply via <a href="${job.link}">here</a> <br><br>Best,<br>Didas Junior.
+      `,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        res.status(400).json(error);
+      } else {
+        console.log("email sent" + info);
+        //res.status(200).json("success");
+      }
+    });
   }
 });
 

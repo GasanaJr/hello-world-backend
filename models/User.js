@@ -21,18 +21,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  skills: {
-    type: String,
-    required: false,
-  },
+  skills: [
+    {
+      type: String,
+      required: false,
+    },
+  ],
   role: {
     type: String,
     required: true,
   },
-  interests: {
-    type: String,
-    required: false,
-  },
+  interests: [
+    {
+      type: String,
+      required: false,
+    },
+  ],
   courses: [
     {
       type: mongoose.Schema.Types.ObjectId,
