@@ -11,6 +11,7 @@ const {
   loginValidation,
   registerValidation,
 } = require("../helpers/validation");
+const Course = require("../models/Course");
 
 // Create a user
 router.post("/register", async (req, res) => {
@@ -249,25 +250,33 @@ router.get("/instructors", async (req, res) => {
 router.post("/job-listings", async (req, res) => {
   const { title, description, requiredSkills, link } = req.body;
 
-  const newJob = new JobListing({
-    title,
-    description,
-    requiredSkills,
-    link,
-  });
-
   try {
-    await newJob.save();
+    // Select Ids of the courses
+    const relevantCourses = await Course.find({
+      category: { $in: requiredSkills },
+    }).select("_id");
+
+    const relevantCoursesId = relevantCourses.map((course) => course._id);
 
     // Find matching users
     const matchingUsers = await User.find({
       skills: { $in: requiredSkills },
+      courses: { $in: relevantCoursesId },
     });
+    const matchingUsersNames = matchingUsers.map((user) => user.name);
 
     // Send emails to matching users (pseudo-code)
-    matchingUsers.forEach((user) => {
-      sendEmailToUser(user, newJob);
+    // matchingUsers.forEach((user) => {
+    //   sendEmailToUser(user, newJob);
+    // });
+    const newJob = new JobListing({
+      title,
+      description,
+      requiredSkills,
+      link,
+      matchingUsers: matchingUsersNames,
     });
+    await newJob.save();
 
     res.status(201).json({
       message: "Job posted successfully and emails sent to matching users.",
@@ -305,6 +314,16 @@ router.post("/job-listings", async (req, res) => {
         //res.status(200).json("success");
       }
     });
+  }
+});
+
+router.get("/job-listings", async (req, res) => {
+  try {
+    const jobListings = await JobListing.find();
+    res.status(200).json({ Message: jobListings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ Message: "Server Error" });
   }
 });
 

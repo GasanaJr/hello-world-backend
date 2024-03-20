@@ -19,6 +19,11 @@ const jobListingSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  matchingUsers: [
+    {
+      type: String,
+    },
+  ],
 });
 
 module.exports = mongoose.model("JobListing", jobListingSchema);
