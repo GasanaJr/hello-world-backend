@@ -266,9 +266,9 @@ router.post("/job-listings", async (req, res) => {
     const matchingUsersNames = matchingUsers.map((user) => user.name);
 
     // Send emails to matching users (pseudo-code)
-    // matchingUsers.forEach((user) => {
-    //   sendEmailToUser(user, newJob);
-    // });
+    matchingUsers.forEach((user) => {
+      sendEmailToUser(user, newJob);
+    });
     const newJob = new JobListing({
       title,
       description,
