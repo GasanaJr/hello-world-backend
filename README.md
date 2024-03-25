@@ -1,3 +1,7 @@
+[![GitHub release](https://img.shields.io/github/release/GasanaJr/hello-world-backend?style=flat-square)](https://github.com/GasanaJr/hello-world-backend/releases)
+
+[![License](https://img.shields.io/github/license/GasanaJr/hello-world-backend?style=flat-square)](https://github.com/GasanaJr/hello-world-backend/blob/master/LICENSE)
+
 # HelloWorld LMS
 
 This is a project designed to make Education and Job opportunities easily accessible in one platform.
@@ -18,7 +22,7 @@ This is a project designed to make Education and Job opportunities easily access
 
 ### Alternatively
 
-- Use the hosted version at [HelloWorldBackend]()
+- Use the hosted version at [HelloWorldBackend](https://hello-world-backend-0jav.onrender.com)
 
 ## Acknowledgements
 

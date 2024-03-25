@@ -10,6 +10,13 @@ app.get("/test", (req, res) => {
   res.json({ Message: "Hello World" });
 });
 
+app.get("/", (req, res) => {
+  res.json({
+    Message:
+      "Yeyy👋. Welcome to the Hello World backend🥳🫡. Enjoy your stay. Developed by Didas Junior.",
+  });
+});
+
 // Middlewares
 app.use(express.json());
 app.use(cors());
