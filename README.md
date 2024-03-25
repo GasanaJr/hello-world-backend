@@ -18,7 +18,7 @@ This is a project designed to make Education and Job opportunities easily access
 
 ### Alternatively
 
-- Use the hosted version at [HelloWorldBackend]()
+- Use the hosted version at [HelloWorldBackend](https://hello-world-backend-0jav.onrender.com)
 
 ## Acknowledgements
 
