@@ -6,7 +6,7 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 // Route to add course by an instructor
 router.post("/add", async (req, res) => {
-  const { title, description, link, instructorEmail } = req.body;
+  const { title, description, link, instructorEmail, category } = req.body;
 
   try {
     // Find the instructor by email
@@ -30,6 +30,7 @@ router.post("/add", async (req, res) => {
       description,
       link,
       instructor: instructor._id, // Assign the instructor's ID to the course
+      category
     });
 
     // Save the new course
