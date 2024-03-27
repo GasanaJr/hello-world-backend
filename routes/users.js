@@ -43,6 +43,7 @@ router.post("/register", async (req, res) => {
         password: hashedPassword,
         isApproved: false,
         qualifications: req.body.qualifications,
+        role: req.body.role
       });
       await instructor.save();
       res.status(201).json({
